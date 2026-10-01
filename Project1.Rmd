@@ -1,0 +1,254 @@
+---
+title: "Module 4/5 Project 1"
+author: "Annie Dang"
+date: "2025-06-12"
+output: ioslides_presentation
+---
+
+<style type="text/css">
+body p, div, h1, h2, h3, h4, h5 {
+color: black;
+font-family: Modern Computer Roman;
+}
+slides > slide.title-slide hgroup h1 {
+color: #8C1D40; <!--the maroon color-->
+}
+h2 {
+color: #8C1D40; <!-- the maroon color-->
+}
+
+slides > slide {
+overflow-x: auto !important;
+overflow-y: auto !important;
+}
+</style>
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## Dataset for our Presentation and Analyses
+
+We will use the **Sleep Health and Lifestyle Dataset** on Kaggle for our presentation and analyses.
+
+I picked this dataset because:
+
+- **Personal Relevance**: I tend to stay up and sleep late pretty often and sleep less than seven hours every school day
+- **Professional Curiosity**: I am curious about how some parts, such as occupation or the amount of sleep, affect our health
+- **Academic Interest**: I am interested in health-related topics whenever I do projects or analyses
+
+## Dataset Quick Summary
+
+Created by Laksika Tharmalingam, the **Sleep Health and Lifestyle Dataset** is a dataset from Kaggle that covers "a wide range of variables related to sleep and daily habits."
+
+- 374 rows, according to the CSV file
+- 13 columns: 
+ - Person ID, Gender, Age, Occupation
+ - Sleep Duration, Quality of Sleep, Physical Activity
+ - Stress Level, BMI Category, Blood Pressure
+ - Heart Rate, Daily Steps, Sleep Disorder
+
+Link: https://www.kaggle.com/datasets/uom190346a/sleep-health-and-lifestyle-dataset
+
+## Problems
+
+**Occupation Impact by Sleep**: When dealing with stress, it could disrupt our sleep patterns, such as duration and quality. That applies to different occupations, giving some employees work-related stress and irregular schedules. Knowing which occupations are affected can inform workplace wellness policies.
+
+**Question**: "Do certain occupations report significantly shorter sleep duration or low-quality scores?"
+
+**BMI Category and Sleep Health**: While obesity is a known risk factor for sleep disorders, its relationship with perceived sleep quality remains understudied in everyday populations.
+
+**Question**: "How does the BMI category correlate with self-reported sleep quality and stress levels?"
+
+## Load Libraries
+
+Now that we know the problems, we will load some libraries to get the tools required for the dataset analysis. I picked ggplot2, dplyr, and tidyr.
+
+```{r load libraries, echo = TRUE}
+
+# Loading libraries
+library(ggplot2)
+library(tidyr)
+library(dplyr)
+```
+
+## Load CSV File
+
+We load the CSV file from the dataset **Sleep_health_and_lifestyle_dataset.csv** and put it in the sleepData variable. That is where we get the rows, columns, and values we need for our analyses.
+
+```{r csv file, echo = TRUE}
+
+# Loading the CSV file
+sleepData = read.csv("Sleep_health_and_lifestyle_dataset.csv", 
+              header = TRUE)
+```
+
+## Check the Variables Summary
+
+To check the loaded CSV file is in place, I use the summary function to view the variables and their information.
+
+```{r variables summary, echo = TRUE}
+
+# Checking that the CSV file is in place
+summary(sleepData)
+```
+
+## Check the Variables Type
+
+I use the glimpse function to see what variable types the columns are, and we see seven integers, five characters, and one double in those thirteen columns.
+
+```{r variables type, echo = TRUE}
+
+# Checking the variable types
+glimpse(sleepData)
+```
+
+## Cleaning and Converting Data
+
+We clean the file from the missing values and convert some columns to different variable types.
+
+```{r clean, echo = TRUE}
+
+# Check if the CSV file have missing values
+sum(is.na(sleepData))
+```
+
+We need to switch the columns from categorical to factorial using the mutate function. That way, it is easier to do analysis testing, such as visualization.
+
+```{r convert, echo = TRUE}
+
+# Converting categorical variables to factors
+sleepData = sleepData %>% 
+  mutate(
+    Occupation = as.factor(Occupation), 
+    BMI.Category = as.factor(BMI.Category))
+```
+
+## Occupation Impact by Sleep
+
+We want to know if certain occupations report significantly shorter sleep duration or low-quality scores.
+
+```{r occSleep, echo = TRUE}
+
+# Creating the occSleep variable
+occSleep = sleepData %>% 
+  group_by(Occupation) %>% 
+  summarize(
+    avgDuration = mean(Sleep.Duration), 
+    avgQuality = mean(Quality.of.Sleep)) %>% 
+  arrange(avgDuration)
+```
+
+## Occupation Impact by Sleep (cont.)
+
+We finished adding some stuff for the occSleep variable, and it is time to create a barplot graph for the chosen columns. We use ggplot to make a graph and put the occSleep variable to extract data we made earlier.
+
+```{r avg duration, echo = TRUE, results = 'hide', fig.show = 'hide'}
+
+# Average Sleep Duration Graph
+ggplot(occSleep, aes(x = reorder(Occupation, avgDuration), 
+                     y = avgDuration)) + geom_col(fill = "red") + 
+  coord_flip() + 
+  labs(title = "Average Sleep Duration by Occupation", x = "", 
+       y = "Hours") + theme_minimal()
+```
+
+We also made a graph for Average Sleep Quality, similar to what we did.
+
+```{r avg quality, echo = TRUE, results = 'hide', fig.show = 'hide'}
+
+# Average Sleep Quality Graph
+ggplot(occSleep, aes(x = reorder(Occupation, avgQuality), 
+                     y = avgQuality)) + geom_col(fill = "blue") + 
+  coord_flip() + 
+  labs(title = "Average Sleep Quality by Occupation", x = "", 
+       y = "Sleep Quality from 1-10") + theme_minimal()
+```
+
+## Occupation Impact by Sleep Graphs
+
+- The first half of these graphs shows surprising similarities, including the y-axis, in contrast to the bottom.
+- One of the differences between the graphs is the occupations: nurse, doctor, manager, software engineer, and teacher switch different positions.
+- Engineers have longer sleep duration and better sleep quality than sales representatives
+
+```{r avg sleep duration and quality, fig.show = 'asis'}
+
+# Average Sleep Duration Graph
+ggplot(occSleep, aes(x = reorder(Occupation, avgDuration), 
+                     y = avgDuration)) + geom_col(fill = "red") + 
+  coord_flip() + 
+  labs(title = "Average Sleep Duration by Occupation", x = "", 
+       y = "Hours") + theme_minimal()
+
+# Average Sleep Quality Graph
+ggplot(occSleep, aes(x = reorder(Occupation, avgQuality), 
+                     y = avgQuality)) + geom_col(fill = "blue") + 
+  coord_flip() + 
+  labs(title = "Average Sleep Quality by Occupation", x = "", 
+       y = "Sleep Quality from 1-10") + theme_minimal()
+```
+
+## BMI Category and Sleep Health
+
+We want to know how the BMI category correlates with self-reported sleep quality and stress levels. That is like the first problem, except we do not create a custom variable. Also, instead of a barplot, we use a boxplot graph and add a legend.
+
+```{r bmi category and sleep health, echo = TRUE, results = 'hide', fig.show = 'hide'}
+
+# Sleep Quality Graph
+ggplot(sleepData, aes(x = BMI.Category, y = Quality.of.Sleep)) + 
+  geom_boxplot(aes(fill = BMI.Category)) + 
+  labs(title = "Sleep Quality by BMI Category", x = "BMI Category", 
+       y = "Sleep Quality (1-10)", fill = "BMI Category") + 
+  theme_minimal()
+
+# Stress Level Graph
+ggplot(sleepData, aes(x = BMI.Category, y = Stress.Level)) + 
+  geom_boxplot(aes(fill = BMI.Category)) + 
+  labs(title = "Stress Level by BMI Category", x = "BMI Category", 
+       y = "Stress Level (1-10)", fill = "BMI Category") + 
+  theme_minimal()
+```
+
+## BMI Category and Sleep Health Graphs
+
+- The x-axis shows different categories: normal, normal weight, obese, and overweight. Each has varied colors, which you can see on the legend.
+- The normal BMI categories have better sleep quality and lower stress level than the overweight and obese categories in terms of medians and interquartile range
+
+```{r sleep quality and stress level, fig.show = 'asis'}
+
+# Sleep Quality Graph
+ggplot(sleepData, aes(x = BMI.Category, y = Quality.of.Sleep)) + 
+  geom_boxplot(aes(fill = BMI.Category)) + 
+  labs(title = "Sleep Quality by BMI Category", x = "BMI Category", 
+       y = "Sleep Quality (1-10)", fill = "BMI Category") + 
+  theme_minimal()
+
+# Stress Level Graph
+ggplot(sleepData, aes(x = BMI.Category, y = Stress.Level)) + 
+  geom_boxplot(aes(fill = BMI.Category)) + 
+  labs(title = "Stress Level by BMI Category", x = "BMI Category", 
+       y = "Stress Level (1-10)", fill = "BMI Category") + 
+  theme_minimal()
+```
+
+## Conclusion
+
+### Occupation Impact on Sleep
+- Engineers have the highest sleep duration (8 hours) and best sleep quality (8.5/10)
+- Sales Representatives have the lowest sleep duration (around 5.8 hours) and poorest sleep quality (4/10), suggesting high work-related stress
+- Actionable insight: High-stress occupations, such as sales or scientists, may benefit from workplace wellness programs to improve sleep
+
+### BMI Category and Sleep Health
+- Employees with normal and normal weight BMI report better sleep quality (Median: 8/10) and lower stress (Median: 5-6/10)
+- Employees with overweight and obese show poorer sleep quality (Median: 6-7/10) and higher stress (Median: 6-7)
+- Actionable insight: Weight management initiatives could enhance both sleep and mental health
+
+## Limitations and Future Work
+
+### Limitations
+- Possible biases in self-reported data
+- Uneven sample size per occupation and BMI group
+
+### Future Work
+- Investigate specific interventions
+- Examples: Flexible schedules for nurses, stress workshops for the sales team, etc.
